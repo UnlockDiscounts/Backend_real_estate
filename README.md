@@ -1,53 +1,223 @@
-# Project Documentation
+# 🏗️ Real Estate Contact Form Backend API
 
-## Project Overview
-UnlockDiscounts is a backend solution for managing real estate listings and securing discounts for users based on specific criteria and events.
+This backend service handles contact form submissions and stores them in a Google Sheet using the Google Sheets API.
 
-## Features
-- Real-time updates on property availability.
-- Discount management based on user profiles and properties.
-- API integration with external real estate services.
+---
 
-## Installation
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/UnlockDiscounts/Backend_real_estate.git
-   ```
-2. Navigate to the directory:
-   ```bash
-   cd Backend_real_estate
-   ```
-3. Install dependencies:
-   ```bash
-   npm install
-   ```
+# 📌 Base URL
 
-## Usage
-To start the server:
-```bash
-npm start
+```
+https://backendrealestate-nine.vercel.app
 ```
 
-## Environment Variables
-Make sure to set the following environment variables in your `.env` file:
-- `DATABASE_URL`: Connection string for the database.
-- `PORT`: Port number the server will run on.
+---
 
-## API Endpoints
-- `GET /api/v1/properties`: Retrieve a list of properties.
-- `POST /api/v1/discounts`: Create a new discount record.
+# ✅ Health Check Endpoint
 
-## Deployment
-For deployment, you can use services like Heroku or AWS. Follow their documentation for setting up environment variables and deploying Node.js applications.
+### GET `/api/health`
 
-## Dependencies
-- Node.js >= 14.x
-- Express
-- Mongoose
+Used to verify if backend is running.
 
-## Contribution Guidelines
-1. Fork the repository.
-2. Create a new feature branch.
-3. Commit your changes.
-4. Push to the branch.
-5. Create a Pull Request to merge your changes.
+### Response
+```json
+{
+  "status": "Backend is running"
+}
+```
+
+---
+
+# 📩 Contact Form Endpoint
+
+### POST `/api/contact`
+
+This endpoint saves form submissions to Google Sheets.
+
+---
+
+## 🔹 Required Request Headers
+
+```http
+Content-Type: application/json
+```
+
+---
+
+## 🔹 Required Request Body (IMPORTANT)
+
+Frontend MUST send exactly these fields:
+
+```json
+{
+  "fullName": "Riya Sharma",
+  "phoneNumber": "+919999999999",
+  "emailAddress": "riya@example.com",
+  "subject": "buy",
+  "message": "I am interested in buying a property."
+}
+```
+
+### ⚠️ Field Names Are Case-Sensitive
+
+The backend expects:
+
+- `fullName`
+- `phoneNumber`
+- `emailAddress`
+- `subject`
+- `message`
+
+If any field is missing or empty, the request will fail.
+
+---
+
+## ✅ Success Response (201)
+
+```json
+{
+  "success": true,
+  "message": "Saved successfully"
+}
+```
+
+---
+
+## ❌ Validation Error (400)
+
+If any field is missing:
+
+```json
+{
+  "error": "All fields are required"
+}
+```
+
+---
+
+## ❌ Server Error (500)
+
+If something fails internally:
+
+```json
+{
+  "success": false,
+  "error": "Error message here"
+}
+```
+
+---
+
+# 🧠 Frontend Integration Example (React)
+
+Use this exact structure when submitting:
+
+```javascript
+const handleSubmit = async () => {
+  const response = await fetch("https://backendrealestate-nine.vercel.app/api/contact", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      fullName: formData.name,
+      phoneNumber: formData.phone,
+      emailAddress: formData.email,
+      subject: formData.subject,
+      message: formData.message
+    })
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error || "Submission failed");
+  }
+
+  alert("Message sent successfully!");
+};
+```
+
+---
+
+# 🌐 CORS Policy
+
+Currently configured to allow all origins:
+
+```javascript
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
+```
+
+This allows frontend apps hosted anywhere to connect.
+
+---
+
+# 📊 Google Sheets Integration
+
+- Spreadsheet ID is stored in environment variable:
+  ```
+  GOOGLE_SHEET_ID
+  ```
+
+- Sheet Tab Name:
+  ```
+  Contact Submissions - Amit Construction
+  ```
+
+- Data is appended in range:
+  ```
+  'Contact Submissions - Amit Construction'!A:F
+  ```
+
+---
+
+# 🔐 Required Environment Variables (Backend)
+
+```
+GOOGLE_PROJECT_ID
+GOOGLE_PRIVATE_KEY_ID
+GOOGLE_PRIVATE_KEY
+GOOGLE_CLIENT_EMAIL
+GOOGLE_CLIENT_ID
+GOOGLE_SHEET_ID
+PORT
+```
+
+---
+
+# 📎 Notes for Frontend Developers
+
+1. Always check `response.ok` before showing success message.
+2. Field names must match exactly.
+3. Use production backend URL (not localhost).
+4. Content-Type must be `application/json`.
+
+---
+
+# 🚀 Deployment
+
+Backend is deployed on:
+
+Vercel Serverless Functions
+
+---
+
+# 📬 Summary
+
+| Feature | Status |
+|----------|--------|
+| Google Sheets Write | ✅ Working |
+| CORS Enabled | ✅ Open |
+| Validation | ✅ Required Fields |
+| Production URL | ✅ Live |
+
+---
+
+For integration issues, check browser Network tab for:
+- Status Code
+- Response Body
+- CORS errors
+
