@@ -36,7 +36,8 @@ app.use(express.json());
 ============================== */
 
 const SPREADSHEET_ID = process.env.GOOGLE_SHEET_ID;
-const SHEET_NAME = 'Contacts';
+const SHEET_NAME = 'Contact Submissions - Amit Construction';
+
 
 const auth = new google.auth.GoogleAuth({
   credentials: {
@@ -78,11 +79,12 @@ app.post('/api/contact', async (req, res) => {
     ]];
 
     await sheets.spreadsheets.values.append({
-      spreadsheetId: SPREADSHEET_ID,
-      range: `${SHEET_NAME}!A:F`,
-      valueInputOption: 'USER_ENTERED',
-      resource: { values },
-    });
+  spreadsheetId: SPREADSHEET_ID,
+  range: `'${SHEET_NAME}'!A:F`,
+  valueInputOption: 'USER_ENTERED',
+  resource: { values },
+});
+
 
     res.status(201).json({
       success: true,
