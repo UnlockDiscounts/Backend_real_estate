@@ -1,0 +1,28 @@
+{
+  "name": "real-estate-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Backend for Real Estate Contact Form with Google Sheets",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "express",
+    "google-sheets",
+    "contact-form"
+  ],
+  "author": "Amit Construction",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "google-auth-library": "^9.4.1",
+    "googleapis": "^118.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}
