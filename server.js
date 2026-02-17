@@ -64,12 +64,12 @@ const sheets = google.sheets({ version: 'v4', auth });
 ============================== */
 
 // Health check
-app.get('/health', (req, res) => {
+app.get('/api/health', (req, res) => {
   res.json({ status: 'Backend is running' });
 });
 
 // Contact form
-app.post('/contact', async (req, res) => {
+app.post('/api/contact', async (req, res) => {
   try {
     const { fullName, phoneNumber, emailAddress, subject, message } = req.body;
 
