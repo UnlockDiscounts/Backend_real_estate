@@ -6,21 +6,19 @@ import { google } from 'googleapis';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
 
 /* ==============================
    CORS CONFIGURATION
 ============================== */
 
 const allowedOrigins = [
-  'http://localhost:3000', // local frontend
-  'https://real-estate-two-sage.vercel.app', // production frontend
+  'http://localhost:3000',
+  'https://real-estate-two-sage.vercel.app',
 ];
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      // allow requests with no origin (like Postman)
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
@@ -28,7 +26,6 @@ app.use(
       }
     },
     methods: ['GET', 'POST'],
-    credentials: true,
   })
 );
 
@@ -49,26 +46,20 @@ const auth = new google.auth.GoogleAuth({
     private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
     client_email: process.env.GOOGLE_CLIENT_EMAIL,
     client_id: process.env.GOOGLE_CLIENT_ID,
-    auth_uri: 'https://accounts.google.com/o/oauth2/auth',
-    token_uri: 'https://oauth2.googleapis.com/token',
-    auth_provider_x509_cert_url:
-      'https://www.googleapis.com/oauth2/v1/certs',
-    client_x509_cert_url: process.env.GOOGLE_CLIENT_X509_CERT_URL,
   },
   scopes: ['https://www.googleapis.com/auth/spreadsheets'],
 });
 
 const sheets = google.sheets({ version: 'v4', auth });
+
 /* ==============================
    ROUTES
 ============================== */
 
-// Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'Backend is running' });
 });
 
-// Contact form
 app.post('/api/contact', async (req, res) => {
   try {
     const { fullName, phoneNumber, emailAddress, subject, message } = req.body;
@@ -77,23 +68,14 @@ app.post('/api/contact', async (req, res) => {
       return res.status(400).json({ error: 'All fields are required' });
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(emailAddress)) {
-      return res.status(400).json({ error: 'Invalid email format' });
-    }
-
-    const phoneRegex = /^[\d\s\-\+\(\)]+$/;
-    if (!phoneRegex.test(phoneNumber)) {
-      return res.status(400).json({ error: 'Invalid phone number format' });
-    }
-
-    const timestamp = new Date().toLocaleString('en-US', {
-      timeZone: 'Asia/Kolkata',
-    });
-
-    const values = [
-      [fullName, phoneNumber, emailAddress, subject, message, timestamp],
-    ];
+    const values = [[
+      fullName,
+      phoneNumber,
+      emailAddress,
+      subject,
+      message,
+      new Date().toISOString()
+    ]];
 
     await sheets.spreadsheets.values.append({
       spreadsheetId: SPREADSHEET_ID,
@@ -104,22 +86,17 @@ app.post('/api/contact', async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message:
-        'Thank you! Your message has been received. We will contact you soon.',
+      message: 'Saved successfully'
     });
+
   } catch (error) {
-    console.error('Error submitting contact form:', error.message);
+    console.error("FULL ERROR:", error);
 
     res.status(500).json({
       success: false,
-      error: 'Failed to submit form. Please try again later.',
+      error: error.message
     });
   }
 });
 
-/* ==============================
-   SERVER
-============================== */
-
 export default app;
-
