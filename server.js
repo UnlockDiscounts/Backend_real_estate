@@ -11,24 +11,12 @@ const app = express();
    CORS CONFIGURATION
 ============================== */
 
-const allowedOrigins = [
-  'http://localhost:3000',
-  'https://real-estate-two-sage.vercel.app',
-];
-
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
-    methods: ['GET', 'POST'],
-  })
-);
-
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
+app.options("*", cors());
 app.use(express.json());
 
 /* ==============================
