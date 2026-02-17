@@ -122,6 +122,5 @@ app.post('/api/contact', async (req, res) => {
    SERVER
 ============================== */
 
-app.listen(PORT, () => {
-  console.log(`Backend running on port ${PORT}`);
-});
+export default app;
+
