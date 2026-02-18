@@ -11,12 +11,20 @@ const app = express();
    CORS CONFIGURATION
 ============================== */
 
+const allowedOrigins = [
+  "https://www.amitbuildingsolutions.in",
+  "https://amitbuildingsolutions.in"
+];
+
 app.use(cors({
-  origin: "*",
-  methods: ["GET", "POST", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  }
 }));
-app.options("*", cors());
 app.use(express.json());
 
 /* ==============================
@@ -25,7 +33,6 @@ app.use(express.json());
 
 const SPREADSHEET_ID = process.env.GOOGLE_SHEET_ID;
 const SHEET_NAME = 'Contact Submissions - Amit Construction';
-
 
 const auth = new google.auth.GoogleAuth({
   credentials: {
@@ -42,6 +49,13 @@ const auth = new google.auth.GoogleAuth({
 const sheets = google.sheets({ version: 'v4', auth });
 
 /* ==============================
+   VALIDATION REGEX
+============================== */
+
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const phoneRegex = /^[6-9]\d{9}$/; // Indian 10-digit mobile
+
+/* ==============================
    ROUTES
 ============================== */
 
@@ -53,29 +67,65 @@ app.post('/api/contact', async (req, res) => {
   try {
     const { fullName, phoneNumber, emailAddress, subject, message } = req.body;
 
+    /* ========= Required Fields ========= */
     if (!fullName || !phoneNumber || !emailAddress || !subject || !message) {
-      return res.status(400).json({ error: 'All fields are required' });
+      return res.status(400).json({
+        success: false,
+        error: 'All fields are required'
+      });
     }
 
-    const values = [[
-      fullName,
-      phoneNumber,
-      emailAddress,
-      subject,
-      message,
-     new Date().toISOString().split('T')[0]
+    /* ========= Full Name Validation ========= */
+    if (fullName.trim().length < 3) {
+      return res.status(400).json({
+        success: false,
+        error: 'Full name must be at least 3 characters'
+      });
+    }
 
+    /* ========= Email Validation ========= */
+    if (!emailRegex.test(emailAddress)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid email format'
+      });
+    }
+
+    /* ========= Phone Validation ========= */
+    if (!phoneRegex.test(phoneNumber)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid phone number (must be 10 digits and start with 6-9)'
+      });
+    }
+
+    /* ========= Message Validation ========= */
+    if (message.trim().length < 10) {
+      return res.status(400).json({
+        success: false,
+        error: 'Message must be at least 10 characters'
+      });
+    }
+
+    /* ========= Append to Google Sheet ========= */
+
+    const values = [[
+      fullName.trim(),
+      phoneNumber,
+      emailAddress.trim(),
+      subject,
+      message.trim(),
+      new Date().toISOString().split('T')[0]
     ]];
 
     await sheets.spreadsheets.values.append({
-  spreadsheetId: SPREADSHEET_ID,
-  range: `'${SHEET_NAME}'!A:F`,
-  valueInputOption: 'USER_ENTERED',
-  resource: { values },
-});
+      spreadsheetId: SPREADSHEET_ID,
+      range: `'${SHEET_NAME}'!A:F`,
+      valueInputOption: 'USER_ENTERED',
+      resource: { values },
+    });
 
-
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: 'Saved successfully'
     });
@@ -83,9 +133,9 @@ app.post('/api/contact', async (req, res) => {
   } catch (error) {
     console.error("FULL ERROR:", error);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      error: error.message
+      error: 'Internal server error'
     });
   }
 });
