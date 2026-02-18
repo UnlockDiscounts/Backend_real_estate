@@ -63,7 +63,8 @@ app.post('/api/contact', async (req, res) => {
       emailAddress,
       subject,
       message,
-      new Date().toISOString()
+     new Date().toISOString().split('T')[0]
+
     ]];
 
     await sheets.spreadsheets.values.append({
