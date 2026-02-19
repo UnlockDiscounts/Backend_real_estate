@@ -67,11 +67,11 @@ app.post('/api/contact', async (req, res) => {
   try {
     const { fullName, phoneNumber, emailAddress, subject, message } = req.body;
 
-    /* ========= Required Fields ========= */
-    if (!fullName || !phoneNumber || !emailAddress || !subject || !message) {
+    /* ========= Required Fields (message removed) ========= */
+    if (!fullName || !phoneNumber || !emailAddress || !subject) {
       return res.status(400).json({
         success: false,
-        error: 'All fields are required'
+        error: 'Full name, phone number, email, and subject are required'
       });
     }
 
@@ -99,14 +99,6 @@ app.post('/api/contact', async (req, res) => {
       });
     }
 
-    /* ========= Message Validation ========= */
-    if (message.trim().length < 10) {
-      return res.status(400).json({
-        success: false,
-        error: 'Message must be at least 10 characters'
-      });
-    }
-
     /* ========= Append to Google Sheet ========= */
 
     const values = [[
@@ -114,7 +106,7 @@ app.post('/api/contact', async (req, res) => {
       phoneNumber,
       emailAddress.trim(),
       subject,
-      message.trim(),
+      message ? message.trim() : "",  // Optional message
       new Date().toISOString().split('T')[0]
     ]];
 
